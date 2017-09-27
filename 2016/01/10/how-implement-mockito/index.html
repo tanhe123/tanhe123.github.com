@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="tanhe123, blog" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="tanhe123's blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="在 WebIDE 团队内部是要求写单元测试的！ 这是我第一次接触Mockito。 初次使用 Mockito，能够感受到它的神奇，尤其是这样的语法： 1when(cal.add(0, 1)).thenReturn(1); Mockito 会把它理解成，当 cal 调用 add 方法且参数为 0 和 1 时，则返回 1。 我们知道，java 中的程序调用是以栈的形式实现的，对于 when 方法，add">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动手编写 Mockito">
+<meta property="og:url" content="http://yoursite.com/2016/01/10/how-implement-mockito/index.html">
+<meta property="og:site_name" content="tanhe123&#39;s blog">
+<meta property="og:description" content="在 WebIDE 团队内部是要求写单元测试的！ 这是我第一次接触Mockito。 初次使用 Mockito，能够感受到它的神奇，尤其是这样的语法： 1when(cal.add(0, 1)).thenReturn(1); Mockito 会把它理解成，当 cal 调用 add 方法且参数为 0 和 1 时，则返回 1。 我们知道，java 中的程序调用是以栈的形式实现的，对于 when 方法，add">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-09-26T08:38:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="动手编写 Mockito">
+<meta name="twitter:description" content="在 WebIDE 团队内部是要求写单元测试的！ 这是我第一次接触Mockito。 初次使用 Mockito，能够感受到它的神奇，尤其是这样的语法： 1when(cal.add(0, 1)).thenReturn(1); Mockito 会把它理解成，当 cal 调用 add 方法且参数为 0 和 1 时，则返回 1。 我们知道，java 中的程序调用是以栈的形式实现的，对于 when 方法，add">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/01/10/how-implement-mockito/"/>
+
+
+
+
+
+  <title>动手编写 Mockito | tanhe123's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">tanhe123's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/01/10/how-implement-mockito/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tanhe123">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tanhe123's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">动手编写 Mockito</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-01-10T22:58:00+08:00">
+                2016-01-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在 WebIDE 团队内部是要求写单元测试的！</p>
+<p>这是我第一次接触Mockito。</p>
+<p>初次使用 Mockito，能够感受到它的神奇，尤其是这样的语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">when(cal.add(0, 1)).thenReturn(1);</div></pre></td></tr></table></figure>
+<p>Mockito 会把它理解成，当 cal 调用 add 方法且参数为 0 和 1 时，则返回 1。</p>
+<p>我们知道，java 中的程序调用是以栈的形式实现的，对于 when 方法，add 方法的调用对它是不可见的。when 能接收到的，只有 add 的返回值。</p>
+<h1 id="那么-Mockito-是如何实现的呢？"><a href="#那么-Mockito-是如何实现的呢？" class="headerlink" title="那么 Mockito 是如何实现的呢？"></a>那么 Mockito 是如何实现的呢？</h1><p>我们知道，Mock 使用了代理模式。我们操作的 cal，实际上是继承了 Calculate 的代理类的实例，我们把它称为 proxy 对象。因此对于 cal 的所有操作，都会先经过 proxy 对象。</p>
+<p>Mocktio 就是通过这种方式，拦截到了 cal 的所有操作。只要在调用 cal 的方法时，将该方法存放起来，然后在调用 thenReturn 为其设置返回值就可以了。</p>
+<h1 id="光说不练假把式"><a href="#光说不练假把式" class="headerlink" title="光说不练假把式"></a>光说不练假把式</h1><p>既然知道了原理，那我们也来尝试着实现一个简单的 Mockito。顺便加深下对代理模式的理解。</p>
+<p>该 Mockito 需要支持的特性有 mock、stub、spy。</p>
+<h2 id="第一步：-实现-mock"><a href="#第一步：-实现-mock" class="headerlink" title="第一步： 实现 mock"></a>第一步： 实现 mock</h2><p>既然要实现 mock，我们要知道，一个对象被 mock 后，有什么特征。</p>
+<p>在单元测试中，我们要测试的模块可能依赖一些不易构造或比较复杂的对象，因此，mock 要支持通过接口、具体类构造 mock 对象。被 mock 的对象只是“假装”调用了该方法，然后“应付”的返回“空值”就可以了。</p>
+<p>我们通过 cglib 来实现，实现代码很简单。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">public static &lt;T&gt; T mock(Class&lt;T&gt; clazz) &#123;</div><div class="line">	Enhancer enhancer = new Enhancer();</div><div class="line">	enhancer.setSuperclass(clazz);</div><div class="line">	enhancer.setCallback(new MockInterceptor());</div><div class="line">	return (T) enhancer.create();</div><div class="line">&#125;</div><div class="line"></div><div class="line">private static class MockInterceptor implements MethodInterceptor &#123;</div><div class="line">	@Override</div><div class="line">	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable &#123;</div><div class="line">		return null;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>测试用例我们可以这么写</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Calculate cal = mock(Calculate.class);</div><div class="line">Assert.assertEquals(0, cal.add(0, 1));</div></pre></td></tr></table></figure>
+<h2 id="第二步，实现-stub"><a href="#第二步，实现-stub" class="headerlink" title="第二步，实现 stub"></a>第二步，实现 stub</h2><p>接下来我们来实现 stub。stub 一个方法，其实就是指定该方法在具体参数下的返回值。而且该返回值无论经过多少次调用都是不变的，除非再次 stub 该方法，用新的返回值将原来的替换掉。</p>
+<p>首先，我们定义一个类，用来表示对一个函数的调用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">public class Invocation &#123;</div><div class="line">	private final Object mock;</div><div class="line"></div><div class="line">	private final Method method;</div><div class="line"></div><div class="line">	private final Object[] arguments;</div><div class="line"></div><div class="line">	private final MethodProxy proxy;</div><div class="line"></div><div class="line">	// 省略其它不重要代码...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接下来，在 MockInterceptor 类中，需要做两个操作。</p>
+<ol>
+<li>为了设置方法的返回值，需要存放对方法的引用（lastInvocation）</li>
+<li>调用方法时，检查是否已经设置了该方法的返回值（results）。如果设置了，则返回该值。</li>
+</ol>
+<p>实现代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">private static class MockInterceptor implements MethodInterceptor &#123;</div><div class="line"></div><div class="line">	@Override</div><div class="line">	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable &#123;</div><div class="line"></div><div class="line">		Invocation invocation = new Invocation(proxy, method, args, proxy);</div><div class="line"></div><div class="line">		lastInvocation = invocation;</div><div class="line"></div><div class="line">		if (results.containsKey(invocation)) &#123;</div><div class="line">			return results.get(invocation);</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		return null;</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">public static &lt;T&gt; When&lt;T&gt; when(T o) &#123;</div><div class="line">	return new When&lt;T&gt;();</div><div class="line">&#125;</div><div class="line"></div><div class="line">public static class When&lt;T&gt; &#123;</div><div class="line">	public void thenReturn(T retObj) &#123;</div><div class="line">		results.put(lastInvocation, retObj);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以通过下面测试下效果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Calculate cal = mock(Calculate.class);</div><div class="line">when(cal.add(0, 1)).thenReturn(1);</div><div class="line">Assert.assertEquals(1, cal.add(0, 1));</div></pre></td></tr></table></figure>
+<h2 id="第三步，实现-spy"><a href="#第三步，实现-spy" class="headerlink" title="第三步，实现 spy"></a>第三步，实现 spy</h2><p>如果说 mock 的处理是返回“空值”，那么 spy 的处理就是通过代理对象调用真实方法了。</p>
+<p>我们使用 cglib 提供的方法，使得 spy 生成的代理类，默认调用真实方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">public Object callRealMethod() &#123;</div><div class="line">	try &#123;</div><div class="line">		return this.proxy.invokeSuper(obj, arguments);</div><div class="line">	&#125; catch (Throwable throwable) &#123;</div><div class="line">		throwable.printStackTrace();</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	return null;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>就这么简单，spy就实现了，可以使用下面的代码测试</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Calculate cal = spy(Calculate.class);</div><div class="line">Assert.assertEquals(3, cal.add(1, 2));</div><div class="line">when(cal.add(1, 2)).thenReturn(0);</div><div class="line">Assert.assertEquals(0, cal.add(1, 2));</div></pre></td></tr></table></figure>
+<p><strong>备注：限于篇幅，只贴出关键代码，可以查看源代码了解更多细节</strong></p>
+<h1 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h1><p>附上示例代码: <a href="https://coding.net/u/tanhe123/p/MockitoSamples" target="_blank" rel="external">https://coding.net/u/tanhe123/p/MockitoSamples</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/12/07/how-spring-security-cache-request/" rel="next" title="探究 Spring Security 缓存请求">
+                <i class="fa fa-chevron-left"></i> 探究 Spring Security 缓存请求
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/02/28/spring-oauth2-introduce/" rel="prev" title="Spring Oauth2 入门">
+                Spring Oauth2 入门 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="/uploads/avatar.jpg"
+              alt="tanhe123" />
+          
+            <p class="site-author-name" itemprop="name">tanhe123</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#那么-Mockito-是如何实现的呢？"><span class="nav-number">1.</span> <span class="nav-text">那么 Mockito 是如何实现的呢？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#光说不练假把式"><span class="nav-number">2.</span> <span class="nav-text">光说不练假把式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第一步：-实现-mock"><span class="nav-number">2.1.</span> <span class="nav-text">第一步： 实现 mock</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第二步，实现-stub"><span class="nav-number">2.2.</span> <span class="nav-text">第二步，实现 stub</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第三步，实现-spy"><span class="nav-number">2.3.</span> <span class="nav-text">第三步，实现 spy</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源代码"><span class="nav-number">3.</span> <span class="nav-text">源代码</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tanhe123</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.2</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

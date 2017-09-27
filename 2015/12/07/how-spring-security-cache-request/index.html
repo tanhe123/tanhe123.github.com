@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="tanhe123, blog" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="tanhe123's blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="为什么要缓存?为了更好的描述问题，我们拿使用表单认证的网站举例，简化后的认证过程分为7步:  用户访问网站，打开了一个链接(origin url)。  请求发送给服务器，服务器判断用户请求了受保护的资源。  由于用户没有登录，服务器重定向到登录页面  填写表单，点击登录  浏览器将用户名密码以表单形式发送给服务器  服务器验证用户名密码。成功，进入到下一步。否则要求用户重新认证（第三步）  服务器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="探究 Spring Security 缓存请求">
+<meta property="og:url" content="http://yoursite.com/2015/12/07/how-spring-security-cache-request/index.html">
+<meta property="og:site_name" content="tanhe123&#39;s blog">
+<meta property="og:description" content="为什么要缓存?为了更好的描述问题，我们拿使用表单认证的网站举例，简化后的认证过程分为7步:  用户访问网站，打开了一个链接(origin url)。  请求发送给服务器，服务器判断用户请求了受保护的资源。  由于用户没有登录，服务器重定向到登录页面  填写表单，点击登录  浏览器将用户名密码以表单形式发送给服务器  服务器验证用户名密码。成功，进入到下一步。否则要求用户重新认证（第三步）  服务器">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-09-26T08:38:32.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="探究 Spring Security 缓存请求">
+<meta name="twitter:description" content="为什么要缓存?为了更好的描述问题，我们拿使用表单认证的网站举例，简化后的认证过程分为7步:  用户访问网站，打开了一个链接(origin url)。  请求发送给服务器，服务器判断用户请求了受保护的资源。  由于用户没有登录，服务器重定向到登录页面  填写表单，点击登录  浏览器将用户名密码以表单形式发送给服务器  服务器验证用户名密码。成功，进入到下一步。否则要求用户重新认证（第三步）  服务器">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/12/07/how-spring-security-cache-request/"/>
+
+
+
+
+
+  <title>探究 Spring Security 缓存请求 | tanhe123's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">tanhe123's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/12/07/how-spring-security-cache-request/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tanhe123">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tanhe123's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">探究 Spring Security 缓存请求</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2015-12-07T22:58:00+08:00">
+                2015-12-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="为什么要缓存"><a href="#为什么要缓存" class="headerlink" title="为什么要缓存?"></a>为什么要缓存?</h2><p>为了更好的描述问题，我们拿使用表单认证的网站举例，简化后的认证过程分为7步:</p>
+<ol>
+<li><p>用户访问网站，打开了一个链接(origin url)。</p>
+</li>
+<li><p>请求发送给服务器，服务器判断用户请求了受保护的资源。</p>
+</li>
+<li><p>由于用户没有登录，服务器重定向到登录页面</p>
+</li>
+<li><p>填写表单，点击登录</p>
+</li>
+<li><p>浏览器将用户名密码以表单形式发送给服务器</p>
+</li>
+<li><p>服务器验证用户名密码。成功，进入到下一步。否则要求用户重新认证（第三步）</p>
+</li>
+<li><p>服务器对用户拥有的权限（角色）判定: 有权限，重定向到 origin url; 权限不足，返回状态码 403(“forbidden”).</p>
+</li>
+</ol>
+<p>从第3步，我们可以知道，用户的请求被中断了。</p>
+<p>用户登录成功后（第7步），会被重定向到 origin url，spring security 通过使用缓存的 request，使得被中断的请求能够继续执行。</p>
+<h2 id="使用缓存"><a href="#使用缓存" class="headerlink" title="使用缓存"></a>使用缓存</h2><p>用户登录成功后，页面重定向到 origin url。浏览器发出的请求优先被拦截器 RequestCacheAwareFilter 拦截，RequestCacheAwareFilter 通过其持有的 RequestCache 对象实现 request 的恢复。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">public void doFilter(ServletRequest request, ServletResponse response,</div><div class="line">			FilterChain chain) throws IOException, ServletException &#123;</div><div class="line"></div><div class="line">	// request匹配，则取出，该操作同时会将缓存的request从session中删除</div><div class="line">	HttpServletRequest wrappedSavedRequest = requestCache.getMatchingRequest((HttpServletRequest) request, (HttpServletResponse) response);</div><div class="line"></div><div class="line">	// 优先使用缓存的request</div><div class="line">	chain.doFilter(wrappedSavedRequest == null ? request : wrappedSavedRequest, response);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="何时缓存"><a href="#何时缓存" class="headerlink" title="何时缓存"></a>何时缓存</h2><p>首先，我们需要了解下 RequestCache 以及 ExceptionTranslationFilter。</p>
+<h3 id="RequestCache"><a href="#RequestCache" class="headerlink" title="RequestCache"></a>RequestCache</h3><p>RequestCache 接口声明了缓存与恢复操作。默认实现类是 <code>HttpSessionRequestCache</code>。HttpSessionRequestCache 的实现比较简单，这里只列出接口的声明:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">public interface RequestCache &#123;</div><div class="line"></div><div class="line">	// 将request缓存到session中</div><div class="line">	void saveRequest(HttpServletRequest request, HttpServletResponse response);</div><div class="line"></div><div class="line">	// 从session中取request</div><div class="line">	SavedRequest getRequest(HttpServletRequest request, HttpServletResponse response);</div><div class="line"></div><div class="line">	// 获得与当前request匹配的缓存，并将匹配的request从session中删除</div><div class="line">	HttpServletRequest getMatchingRequest(HttpServletRequest request,</div><div class="line">			HttpServletResponse response);</div><div class="line"></div><div class="line">	// 删除缓存的request</div><div class="line">	void removeRequest(HttpServletRequest request, HttpServletResponse response);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="ExceptionTranslationFilter"><a href="#ExceptionTranslationFilter" class="headerlink" title="ExceptionTranslationFilter"></a>ExceptionTranslationFilter</h3><p>ExceptionTranslationFilter 是 Spring Security 的核心 filter 之一，用来处理 AuthenticationException 和 AccessDeniedException 两种异常。</p>
+<p>在我们的例子中，AuthenticationException 指的是未登录状态下访问受保护资源，AccessDeniedException 指的是登陆了但是由于权限不足(比如普通用户访问管理员界面）。</p>
+<p>ExceptionTranslationFilter 持有两个处理类，分别是 AuthenticationEntryPoint 和 AccessDeniedHandler。</p>
+<p>ExceptionTranslationFilter 对异常的处理是通过这两个处理类实现的，处理规则很简单：</p>
+<blockquote>
+<p><strong>规则1:</strong> 如果异常是 AuthenticationException，使用 AuthenticationEntryPoint 处理<br><strong>规则2:</strong> 如果异常是 AccessDeniedException 且用户是匿名用户，使用 AuthenticationEntryPoint 处理<br><strong>规则3:</strong> 如果异常是 AccessDeniedException 且用户不是匿名用户，如果否则交给 AccessDeniedHandler 处理  </p>
+</blockquote>
+<p>对应以下代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">private void handleSpringSecurityException(HttpServletRequest request,</div><div class="line">			HttpServletResponse response, FilterChain chain, RuntimeException exception)</div><div class="line">			throws IOException, ServletException &#123;</div><div class="line">	if (exception instanceof AuthenticationException) &#123;</div><div class="line">		logger.debug(</div><div class="line">			&quot;Authentication exception occurred; redirecting to authentication entry point&quot;, exception);</div><div class="line"></div><div class="line">			sendStartAuthentication(request, response, chain, (AuthenticationException) exception);</div><div class="line">		&#125;</div><div class="line">	else if (exception instanceof AccessDeniedException) &#123;</div><div class="line">		if (authenticationTrustResolver.isAnonymous(SecurityContextHolder.getContext().getAuthentication())) &#123;</div><div class="line">			logger.debug(&quot;Access is denied (user is anonymous); redirecting to authentication entry point&quot;,	exception);</div><div class="line"></div><div class="line">			sendStartAuthentication(request, response, chain, new InsufficientAuthenticationException(&quot;Full authentication is required to access this resource&quot;));</div><div class="line">		&#125;</div><div class="line">		else &#123;</div><div class="line">			logger.debug(</div><div class="line">				&quot;Access is denied (user is not anonymous); delegating to AccessDeniedHandler&quot;, exception);</div><div class="line"></div><div class="line">			accessDeniedHandler.handle(request, response, (AccessDeniedException) exception);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>AccessDeniedHandler 默认实现是 AccessDeniedHandlerImpl。该类对异常的处理是返回403错误码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">public void handle(HttpServletRequest request, HttpServletResponse response,</div><div class="line">			AccessDeniedException accessDeniedException) throws IOException,</div><div class="line">			ServletException &#123;</div><div class="line">	if (!response.isCommitted()) &#123;</div><div class="line">		if (errorPage != null) &#123;  // 定义了errorPage</div><div class="line">			// errorPage中可以操作该异常</div><div class="line">			request.setAttribute(WebAttributes.ACCESS_DENIED_403,</div><div class="line">					accessDeniedException);</div><div class="line"></div><div class="line">			// 设置403状态码</div><div class="line">			response.setStatus(HttpServletResponse.SC_FORBIDDEN);</div><div class="line"></div><div class="line">			// 转发到errorPage</div><div class="line">			RequestDispatcher dispatcher = request.getRequestDispatcher(errorPage);</div><div class="line">			dispatcher.forward(request, response);</div><div class="line">		&#125;</div><div class="line">		else &#123; // 没有定义errorPage，则返回403状态码(Forbidden)，以及错误信息</div><div class="line">			response.sendError(HttpServletResponse.SC_FORBIDDEN,</div><div class="line">					accessDeniedException.getMessage());</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>AuthenticationEntryPoint 默认实现是 LoginUrlAuthenticationEntryPoint, 该类的处理是转发或重定向到登录页面</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line">public void commence(HttpServletRequest request, HttpServletResponse response,</div><div class="line">			AuthenticationException authException) throws IOException, ServletException &#123;</div><div class="line"></div><div class="line">	String redirectUrl = null;</div><div class="line"></div><div class="line">	if (useForward) &#123;</div><div class="line"></div><div class="line">		if (forceHttps &amp;&amp; &quot;http&quot;.equals(request.getScheme())) &#123;</div><div class="line">			// First redirect the current request to HTTPS.</div><div class="line">			// When that request is received, the forward to the login page will be</div><div class="line">			// used.</div><div class="line">			redirectUrl = buildHttpsRedirectUrlForRequest(request);</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		if (redirectUrl == null) &#123;</div><div class="line">			String loginForm = determineUrlToUseForThisRequest(request, response,</div><div class="line">					authException);</div><div class="line"></div><div class="line">			if (logger.isDebugEnabled()) &#123;</div><div class="line">				logger.debug(&quot;Server side forward to: &quot; + loginForm);</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			RequestDispatcher dispatcher = request.getRequestDispatcher(loginForm);</div><div class="line"></div><div class="line">			// 转发</div><div class="line">			dispatcher.forward(request, response);</div><div class="line"></div><div class="line">			return;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	else &#123;</div><div class="line">		// redirect to login page. Use https if forceHttps true</div><div class="line">		redirectUrl = buildRedirectUrlToLoginPage(request, response, authException);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	// 重定向</div><div class="line">	redirectStrategy.sendRedirect(request, response, redirectUrl);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>了解完这些，回到我们的例子。</p>
+<p>第3步时，用户未登录的情况下访问受保护资源，ExceptionTranslationFilter 会捕获到 AuthenticationException 异常(规则1)。页面需要跳转，ExceptionTranslationFilter 在跳转前使用 requestCache 缓存 request。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">protected void sendStartAuthentication(HttpServletRequest request,</div><div class="line">			HttpServletResponse response, FilterChain chain,</div><div class="line">			AuthenticationException reason) throws ServletException, IOException &#123;</div><div class="line">	// SEC-112: Clear the SecurityContextHolder&apos;s Authentication, as the</div><div class="line">	// existing Authentication is no longer considered valid</div><div class="line">	SecurityContextHolder.getContext().setAuthentication(null);</div><div class="line">	// 缓存 request</div><div class="line">	requestCache.saveRequest(request, response);</div><div class="line">	logger.debug(&quot;Calling Authentication entry point.&quot;);</div><div class="line">	authenticationEntryPoint.commence(request, response, reason);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="一些坑"><a href="#一些坑" class="headerlink" title="一些坑"></a>一些坑</h2><p>在开发过程中，如果不理解 Spring Security 如何缓存 request，可能会踩一些坑。</p>
+<p>举个简单例子，如果网站认证是信息存放在 header 中。第一次请求受保护资源时，请求头中不包含认证信息 ，验证失败，该请求会被缓存，之后即使用户填写了信息，也会因为request被恢复导致信息丢失从而认证失败(问题描述可以参见<a href="http://stackoverflow.com/questions/33568237/how-to-disable-or-override-requestcacheawarefilter-in-spring-boot" target="_blank" rel="external">这里</a>。</p>
+<p>最简单的方案当然是不缓存request。</p>
+<p>spring security 提供了 NullRequestCache， 该类实现了 RequestCache 接口，但是没有任何操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">public class NullRequestCache implements RequestCache &#123;</div><div class="line"></div><div class="line">	public SavedRequest getRequest(HttpServletRequest request,</div><div class="line">			HttpServletResponse response) &#123;</div><div class="line">		return null;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public void removeRequest(HttpServletRequest request, HttpServletResponse response) &#123;</div><div class="line"></div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public void saveRequest(HttpServletRequest request, HttpServletResponse response) &#123;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	public HttpServletRequest getMatchingRequest(HttpServletRequest request,</div><div class="line">			HttpServletResponse response) &#123;</div><div class="line">		return null;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>配置 requestCache，使用如下代码即可:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http.requestCache().requestCache(new NullRequestCache());</div></pre></td></tr></table></figure>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><p>默认情况下，三种 request 不会被缓存。</p>
+<ol>
+<li>请求地址以 <code>/favicon.ico</code> 结尾</li>
+<li>header中的 <code>content-type</code> 值为 <code>application/json</code></li>
+<li>header中的 <code>X-Requested-With</code> 值为 <code>XMLHttpRequest</code></li>
+</ol>
+<p>可以参见：<code>RequestCacheConfigurer</code> 类中的私有方法 <code>createDefaultSavedRequestMatcher</code>。</p>
+<p>附上实例代码: <a href="https://coding.net/u/tanhe123/p/SpringSecurityRequestCache" target="_blank" rel="external">https://coding.net/u/tanhe123/p/SpringSecurityRequestCache</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/01/10/how-implement-mockito/" rel="prev" title="动手编写 Mockito">
+                动手编写 Mockito <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="/uploads/avatar.jpg"
+              alt="tanhe123" />
+          
+            <p class="site-author-name" itemprop="name">tanhe123</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要缓存"><span class="nav-number">1.</span> <span class="nav-text">为什么要缓存?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用缓存"><span class="nav-number">2.</span> <span class="nav-text">使用缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#何时缓存"><span class="nav-number">3.</span> <span class="nav-text">何时缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RequestCache"><span class="nav-number">3.1.</span> <span class="nav-text">RequestCache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ExceptionTranslationFilter"><span class="nav-number">3.2.</span> <span class="nav-text">ExceptionTranslationFilter</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一些坑"><span class="nav-number">4.</span> <span class="nav-text">一些坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#补充"><span class="nav-number">5.</span> <span class="nav-text">补充</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tanhe123</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.2</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

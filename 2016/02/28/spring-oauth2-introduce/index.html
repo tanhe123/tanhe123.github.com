@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="tanhe123, blog" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="tanhe123's blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="如果我们的客户端需要对用户 Github 进行一些操作，比如读取用户项目列表、上传 SSH Key 等，需要先获得 Gtihub 的授权。而 Github 使用 Oauth 2 进行授权。 本篇博客要介绍的 Spring Oauth2 是 Oauth 2.0 的实现，它简化了大部分的操作, 比如获得 access token、刷新 access token 的过程，使得通过简单配置，就可以轻松接入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Oauth2 入门">
+<meta property="og:url" content="http://yoursite.com/2016/02/28/spring-oauth2-introduce/index.html">
+<meta property="og:site_name" content="tanhe123&#39;s blog">
+<meta property="og:description" content="如果我们的客户端需要对用户 Github 进行一些操作，比如读取用户项目列表、上传 SSH Key 等，需要先获得 Gtihub 的授权。而 Github 使用 Oauth 2 进行授权。 本篇博客要介绍的 Spring Oauth2 是 Oauth 2.0 的实现，它简化了大部分的操作, 比如获得 access token、刷新 access token 的过程，使得通过简单配置，就可以轻松接入">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2016/02/28/spring-oauth2-introduce/bg2016022801.png">
+<meta property="og:image" content="http://yoursite.com/2016/02/28/spring-oauth2-introduce/bg2016022803.png">
+<meta property="og:image" content="http://yoursite.com/2016/02/28/spring-oauth2-introduce/bg2016022802.png">
+<meta property="og:updated_time" content="2017-09-26T16:05:13.109Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Oauth2 入门">
+<meta name="twitter:description" content="如果我们的客户端需要对用户 Github 进行一些操作，比如读取用户项目列表、上传 SSH Key 等，需要先获得 Gtihub 的授权。而 Github 使用 Oauth 2 进行授权。 本篇博客要介绍的 Spring Oauth2 是 Oauth 2.0 的实现，它简化了大部分的操作, 比如获得 access token、刷新 access token 的过程，使得通过简单配置，就可以轻松接入">
+<meta name="twitter:image" content="http://yoursite.com/2016/02/28/spring-oauth2-introduce/bg2016022801.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/02/28/spring-oauth2-introduce/"/>
+
+
+
+
+
+  <title>Spring Oauth2 入门 | tanhe123's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">tanhe123's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/02/28/spring-oauth2-introduce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tanhe123">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tanhe123's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring Oauth2 入门</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-02-28T21:55:00+08:00">
+                2016-02-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>如果我们的客户端需要对用户 Github 进行一些操作，比如读取用户项目列表、上传 SSH Key 等，需要先获得 Gtihub 的授权。而 Github 使用 Oauth 2 进行授权。</p>
+<p>本篇博客要介绍的 Spring Oauth2 是 Oauth 2.0 的实现，它简化了大部分的操作, 比如获得 access token、刷新 access token 的过程，使得通过简单配置，就可以轻松接入第三方的 Oauth 2.0 服务。</p>
+<p>如果不了解 Oauth 2 的原理，推荐阅读<a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="external">阮一峰的文章</a>。</p>
+<img src="/2016/02/28/spring-oauth2-introduce/bg2016022801.png" alt="bg2016022801.png" title="">
+<a id="more"></a>
+<h2 id="一、创建-Gtihub-应用"><a href="#一、创建-Gtihub-应用" class="headerlink" title="一、创建 Gtihub 应用"></a>一、创建 Gtihub 应用</h2><p>了解完 Oauth2 原理，我们通过一个 demo，了解 spring oauth2 使用方法。</p>
+<p>登录 Github 后，依次选择 Settings -&gt; OAuth applications -&gt; Developer applications -&gt; Register new application, 然后配置应用的信息, 依次填写 Application Name、Homepage URL、Application description、Authorization callback URL后，选择 Regiser application。</p>
+<img src="/2016/02/28/spring-oauth2-introduce/bg2016022803.png" alt="github application" title="github application">
+<p>其中 Authorization callback URL 需要特别注意下，当我们请求 Github 授权时，有一个可选参数 <code>redirect_uri</code>，该参数指定了 Github 完成授权后重定向的网址。如果省略该参数，Github 会默认重定向到 Authorization callback URL。除此之外 Authorization callback URL 对 redirect_uri 也有一定的<a href="https://developer.github.com/v3/oauth/#redirect-urls" target="_blank" rel="external">限制作用</a>，即 redirect_uri 只能是 Authorization callback URL 的子路径。</p>
+<p>创建完 Github 应用，我们就得到了 Github 分发的 Client Id 与 Client Secret。</p>
+<img src="/2016/02/28/spring-oauth2-introduce/bg2016022802.png" alt="IdAndSecret" title="IdAndSecret">
+<h2 id="二、为项目添加-maven-依赖"><a href="#二、为项目添加-maven-依赖" class="headerlink" title="二、为项目添加 maven 依赖"></a>二、为项目添加 maven 依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.security.oauth<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-security-oauth2<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.0.9.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></div></pre></td></tr></table></figure>
+<h2 id="三、开启注解配置"><a href="#三、开启注解配置" class="headerlink" title="三、开启注解配置"></a>三、开启注解配置</h2><figure class="highlight less"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="variable">@Configuration</span></div><div class="line"><span class="variable">@EnableOAuth2Client</span></div><div class="line">public class OAuthConfig &#123;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该注解提供将会做两件事：</p>
+<ol>
+<li>注册一个 Filter（oauth2ClientContextFilter）</li>
+<li>创建一个作用域为 request、类型为 AccessTokenRequest 的 bean。</li>
+</ol>
+<h2 id="三、配置客户端信息"><a href="#三、配置客户端信息" class="headerlink" title="三、配置客户端信息"></a>三、配置客户端信息</h2><p>OAuth 2.0 有四种授权方式。分别为：</p>
+<blockquote>
+<p>授权码模式（authorization code）<br>简化模式（implicit）<br>密码模式（resource owner password credentials）<br>客户端模式（client credentials）  </p>
+</blockquote>
+<p>spring 提供了 4 种 bean，依次与这四种授权方式对应，用来设定每种方式的配置信息。</p>
+<p>这 4 个 bean 依次为：AuthorizationCodeResourceDetails、ImplicitResourceDetails、ImplicitResourceDetails、ClientCredentialsResourceDetails。</p>
+<p>我们使用授权码模式配置 github 的 id、secret、申请认证地址、申请令牌地址、<a href="https://developer.github.com/v3/oauth/#scopes" target="_blank" rel="external">scope</a>等信息，可以这么写：</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">Bean</span></div><div class="line"><span class="keyword">public </span>OAuth2ProtectedResourceDetails github() &#123;</div><div class="line">    AuthorizationCodeResourceDetails details = new AuthorizationCodeResourceDetails()<span class="comment">;</span></div><div class="line">    details.setId(<span class="string">"github"</span>)<span class="comment">;</span></div><div class="line">    details.setClientId(<span class="string">"your client id"</span>)<span class="comment">;</span></div><div class="line">    details.setClientSecret(<span class="string">"your client secret"</span>)<span class="comment">;</span></div><div class="line">    details.setAccessTokenUri(<span class="string">"https://github.com/login/oauth/access_token"</span>)<span class="comment">;</span></div><div class="line">    details.setUserAuthorizationUri(<span class="string">"https://github.com/login/oauth/authorize"</span>)<span class="comment">;</span></div><div class="line">    details.setScope(Arrays.asList(<span class="string">"repo"</span>, <span class="string">"user:email"</span>, <span class="string">"write:public_key"</span>, <span class="string">"read:public_key"</span>))<span class="comment">;</span></div><div class="line">    return details<span class="comment">;</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="四、配置-Oauth2Clientcontext"><a href="#四、配置-Oauth2Clientcontext" class="headerlink" title="四、配置 Oauth2Clientcontext"></a>四、配置 Oauth2Clientcontext</h2><figure class="highlight less"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="variable">@Resource</span>(name = <span class="string">"accessTokenRequest"</span>)</div><div class="line">private AccessTokenRequest accessTokenRequest;</div><div class="line"></div><div class="line"><span class="variable">@Bean</span></div><div class="line"><span class="variable">@Scope</span>(value = <span class="string">"session"</span>, proxyMode = INTERFACES)</div><div class="line">public OAuth2ClientContext githubOauth2ClientContext() &#123;</div><div class="line">    <span class="selector-tag">return</span> <span class="selector-tag">new</span> <span class="selector-tag">DefaultOAuth2ClientContext</span>(accessTokenRequest);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>accessTokenRequest 的配置信息在 <code>OAuth2ClientConfiguration</code> 中, accessTokenRequest 的作用域是 request，即每一次 HTTP 请求都会产生一个新的 accessTokenRequest。</p>
+<p>这里的 <code>@Scope(value = &quot;session&quot;, proxyMode = INTERFACES)</code>， session 的意思是该 bean 的作用域为 session 级别，而 <code>proxyMode = INTERFACES</code> 保证了，即使该类被比作用域大于 session 的 bean 所持有，仍能保证在不同的 session，会构造不同的 OAuth2ClientContext。</p>
+<h2 id="五、配置-OAuth2RestTemplate"><a href="#五、配置-OAuth2RestTemplate" class="headerlink" title="五、配置 OAuth2RestTemplate"></a>五、配置 OAuth2RestTemplate</h2><figure class="highlight less"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="variable">@Bean</span></div><div class="line">public OAuth2RestOperations githubRestTemplate(<span class="variable">@Qualifier</span>(<span class="string">"githubOauth2ClientContext"</span>) OAuth2ClientContext clientContext) &#123;</div><div class="line">    <span class="selector-tag">return</span> <span class="selector-tag">new</span> <span class="selector-tag">OAuth2RestTemplate</span>(github(), clientContext);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通常，我们需要接入多个 oauth2 服务，因此会有多个 clientContext，这里我们使用 Qualifier 注解按照 bean 的名称注入。</p>
+<p>如果我们确认只接入一个 oauth2 服务，那么就可以完全省略第四步，然后将第五步改为下面的代码：</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="keyword">public</span> <span class="function">OAuth2RestOperations <span class="title">githubRestTemplate</span><span class="params">(OAuth2ClientContext clientContext)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> OAuth2RestTemplate(github(), clientContext);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以直接注入 clientContext 的原因是 <code>OAuth2ClientConfiguration</code> 类已经默认为我们提供了。</p>
+<h2 id="六、配置-OAuth2RestTemplate"><a href="#六、配置-OAuth2RestTemplate" class="headerlink" title="六、配置 OAuth2RestTemplate"></a>六、配置 OAuth2RestTemplate</h2><p>得到了 OAuth2RestTemplate，我们只需要使用 OAuth2RestTemplate 请求对应的服务就可以了。</p>
+<p>比如要获取用户 github 所有的项目：</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">JsonObject repos</span> = githubRestTemplate.getForObject(<span class="string">"https://api.github.com/user/repos"</span>, JsonObject.class);</div></pre></td></tr></table></figure>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>demo 中包含了 Github 与 Bbitbucket 的 Oauth2.0 授权以及 Bitbucket 的 Oauth 1.0 授权配置。</p>
+<p><a href="https://github.com/tanhe123/SpringOAuthSeample" target="_blank" rel="external">https://github.com/tanhe123/SpringOAuthSeample</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://github.com/spring-projects/spring-security-oauth" target="_blank" rel="external">https://github.com/spring-projects/spring-security-oauth</a> 中的 samples<br><a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="external">http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html</a><br><a href="https://developer.github.com/v3/" target="_blank" rel="external">https://developer.github.com/v3/</a><br><a href="http://projects.spring.io/spring-security-oauth/docs/oauth2.html" target="_blank" rel="external">http://projects.spring.io/spring-security-oauth/docs/oauth2.html</a><br><a href="http://www.oschina.net/translate/oauth-2-developers-guide" target="_blank" rel="external">http://www.oschina.net/translate/oauth-2-developers-guide</a>  </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/01/10/how-implement-mockito/" rel="next" title="动手编写 Mockito">
+                <i class="fa fa-chevron-left"></i> 动手编写 Mockito
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/03/15/java-and-unicode/" rel="prev" title="Java 与 Unicode">
+                Java 与 Unicode <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="/uploads/avatar.jpg"
+              alt="tanhe123" />
+          
+            <p class="site-author-name" itemprop="name">tanhe123</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、创建-Gtihub-应用"><span class="nav-number">1.</span> <span class="nav-text">一、创建 Gtihub 应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、为项目添加-maven-依赖"><span class="nav-number">2.</span> <span class="nav-text">二、为项目添加 maven 依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、开启注解配置"><span class="nav-number">3.</span> <span class="nav-text">三、开启注解配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、配置客户端信息"><span class="nav-number">4.</span> <span class="nav-text">三、配置客户端信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、配置-Oauth2Clientcontext"><span class="nav-number">5.</span> <span class="nav-text">四、配置 Oauth2Clientcontext</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、配置-OAuth2RestTemplate"><span class="nav-number">6.</span> <span class="nav-text">五、配置 OAuth2RestTemplate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、配置-OAuth2RestTemplate"><span class="nav-number">7.</span> <span class="nav-text">六、配置 OAuth2RestTemplate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码"><span class="nav-number">8.</span> <span class="nav-text">源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tanhe123</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.2</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

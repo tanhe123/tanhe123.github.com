@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="tanhe123, blog" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="tanhe123's blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1 Visual VM项目中的某一个接口，在某一场景下（数据量大），性能让人难以忍受。 那么如何有什么工具可以定位引发性能问题的代码呢？其实有很多，这里我们使用 Visual VM。  Visual VM 是一款用来分析 Java 应用的图形工具，能够对 Java 应用程序做性能分析和调优。如果你使用的 java 7 或者 java 8，那么可以直接在 JDK 的 bin 目录找到该工具，名称为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 项目优化实战">
+<meta property="og:url" content="http://yoursite.com/2016/03/27/how-to-optimize/index.html">
+<meta property="og:site_name" content="tanhe123&#39;s blog">
+<meta property="og:description" content="1 Visual VM项目中的某一个接口，在某一场景下（数据量大），性能让人难以忍受。 那么如何有什么工具可以定位引发性能问题的代码呢？其实有很多，这里我们使用 Visual VM。  Visual VM 是一款用来分析 Java 应用的图形工具，能够对 Java 应用程序做性能分析和调优。如果你使用的 java 7 或者 java 8，那么可以直接在 JDK 的 bin 目录找到该工具，名称为">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031203.png">
+<meta property="og:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031204.png">
+<meta property="og:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031201.png">
+<meta property="og:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031205.png">
+<meta property="og:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031202.png">
+<meta property="og:updated_time" content="2017-09-26T09:42:31.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java 项目优化实战">
+<meta name="twitter:description" content="1 Visual VM项目中的某一个接口，在某一场景下（数据量大），性能让人难以忍受。 那么如何有什么工具可以定位引发性能问题的代码呢？其实有很多，这里我们使用 Visual VM。  Visual VM 是一款用来分析 Java 应用的图形工具，能够对 Java 应用程序做性能分析和调优。如果你使用的 java 7 或者 java 8，那么可以直接在 JDK 的 bin 目录找到该工具，名称为">
+<meta name="twitter:image" content="http://yoursite.com/2016/03/27/how-to-optimize/bg2016031203.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/03/27/how-to-optimize/"/>
+
+
+
+
+
+  <title>Java 项目优化实战 | tanhe123's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">tanhe123's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/03/27/how-to-optimize/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tanhe123">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tanhe123's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java 项目优化实战</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-03-27T21:55:00+08:00">
+                2016-03-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-Visual-VM"><a href="#1-Visual-VM" class="headerlink" title="1 Visual VM"></a>1 Visual VM</h2><p>项目中的某一个接口，在某一场景下（数据量大），性能让人难以忍受。</p>
+<p>那么如何有什么工具可以定位引发性能问题的代码呢？其实有很多，这里我们使用 Visual VM。</p>
+<img src="/2016/03/27/how-to-optimize/bg2016031203.png" alt="bg2016031203.png" title="">
+<p>Visual VM 是一款用来分析 Java 应用的图形工具，能够对 Java 应用程序做性能分析和调优。如果你使用的 java 7 或者 java 8，那么可以直接在 JDK 的 bin 目录找到该工具，名称为 jvisualvm。当然也可以在<a href="http://visualvm.java.net/" target="_blank" rel="external">官网</a>上自行下载。</p>
+<p>使用 Visual VM 分析某个接口的性能的方法如下：</p>
+<img src="/2016/03/27/how-to-optimize/bg2016031204.png" alt="bg2016031204.png" title="">
+<p>结果显示如下:</p>
+<img src="/2016/03/27/how-to-optimize/bg2016031201.png" alt="bg2016031201.png" title="">
+<p>通过上图，我们可以看到比较耗时的方法为 resolveBytePosition 和 rest，getFile 和 currentUser 是网络请求，暂不考虑。</p>
+<h2 id="2-优化一"><a href="#2-优化一" class="headerlink" title="2 优化一"></a>2 优化一</h2><h3 id="2-1-背景"><a href="#2-1-背景" class="headerlink" title="2.1 背景"></a>2.1 背景</h3><p>首先拿 resolveBytePosition 方法开刀。为了能更容易的解释 resolveBytePosition 的用途，举个例子。</p>
+<p>给定一个字符串 chars 与该字符串的 UTF-8 二进制数组(空格用来隔开字符数据，实际并不存在):</p>
+<pre><code>chars = &quot;just一个test&quot;;
+bytes = &quot;6A 75 73 74 E4B880 E4B8AA 74 65 73 74&quot;;
+</code></pre><p>resolveBytePosition 用来解决给定一个 bytes 的偏移 bytePos 计算 chars 中的偏移 charPos 的问题。比如:</p>
+<pre><code>bytePos = 0 (6A) 对应 charPos = 0 (j)
+bytePos = 1 (75) 对应 charPos = 1 (u)
+</code></pre><p>如果使用 array[start:] 表示从下标 start 开始截取数组元素至末尾组成的新数组，那么则有：</p>
+<pre><code>bytes[bytePos:] = chars[charPos:]
+</code></pre><p>举例:</p>
+<pre><code>bytes[0:] = chars[0:]
+bytes[1:] = chars[1:]
+bytes[10:] = chars[6:]
+</code></pre><h3 id="2-2-原实现"><a href="#2-2-原实现" class="headerlink" title="2.2 原实现"></a>2.2 原实现</h3><p>明白了 resolveBytePosition 的作用，看一下它的实现</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public int resolveBytePosition(byte[] bytes, int bytePos) &#123;</div><div class="line">    return new String(slice(bytes, 0, bytePos)).length();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该解法简单粗暴，能够准确的计算出结果，但是缺点显而易见，频繁的构建字符串，对性能造成了极大的影响。通过 Visual VM 可以证实我们的推论，通过点击快照，查看更详细的方法调用耗时。</p>
+<img src="/2016/03/27/how-to-optimize/bg2016031205.png" alt="bg2016031205.png" title="">
+<h3 id="2-3-剖析"><a href="#2-3-剖析" class="headerlink" title="2.3 剖析"></a>2.3 剖析</h3><p>为了更方便的剖析问题，我们绘制如下表格，用来展示每一个字符的 UTF-8 以及 Unicode 的二进制数据：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">j</th>
+<th style="text-align:center">u</th>
+<th style="text-align:center">s</th>
+<th style="text-align:center">t</th>
+<th style="text-align:center">一</th>
+<th style="text-align:center">个</th>
+<th style="text-align:center">t</th>
+<th style="text-align:center">e</th>
+<th style="text-align:center">s</th>
+<th style="text-align:center">t</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">UTF-8</td>
+<td style="text-align:center">6A</td>
+<td style="text-align:center">75</td>
+<td style="text-align:center">73</td>
+<td style="text-align:center">74</td>
+<td style="text-align:center">E4B880</td>
+<td style="text-align:center">E4B8AA</td>
+<td style="text-align:center">74</td>
+<td style="text-align:center">65</td>
+<td style="text-align:center">73</td>
+<td style="text-align:center">74</td>
+</tr>
+<tr>
+<td style="text-align:center">Unicode</td>
+<td style="text-align:center">6A</td>
+<td style="text-align:center">75</td>
+<td style="text-align:center">73</td>
+<td style="text-align:center">74</td>
+<td style="text-align:center">4E00</td>
+<td style="text-align:center">4E2A</td>
+<td style="text-align:center">74</td>
+<td style="text-align:center">65</td>
+<td style="text-align:center">73</td>
+<td style="text-align:center">74</td>
+</tr>
+</tbody>
+</table>
+<p>接着我们将字节数据转换为字节长度：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">j</th>
+<th style="text-align:center">u</th>
+<th style="text-align:center">s</th>
+<th style="text-align:center">t</th>
+<th style="text-align:center">一</th>
+<th style="text-align:center">个</th>
+<th style="text-align:center">t</th>
+<th style="text-align:center">e</th>
+<th style="text-align:center">s</th>
+<th style="text-align:center">t</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">UTF-8</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td style="text-align:center">Unicode</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+</tr>
+</tbody>
+</table>
+<p>Java中的使用 char 来表示Unicode，char 的长度为 2 个字节，因此一个 char 足以表示示例中的任何一个字符。</p>
+<p>我们使用一个单元格表示一个byte（UTF-8）或一个char（Unicode），并对单元格编号，得到下表：</p>
+<table><thead><tr><th style="text-align: center">&nbsp;</th><th style="text-align: center">j</th><th style="text-align: center">u</th><th style="text-align: center">s</th><th style="text-align: center">t</th><th style="text-align: center" colspan="3">一</th><th style="text-align: center" colspan="3">个</th><th style="text-align: center">t</th><th style="text-align: center">e</th><th style="text-align: center">s</th><th style="text-align: center">t</th></tr></thead><tbody><tr></tr><tr><td style="text-align: center">bytes</td><td style="text-align: center">0</td><td style="text-align: center">1</td><td style="text-align: center">2</td><td style="text-align: center">3</td><td style="text-align: center">4</td><td style="text-align: center">5</td><td style="text-align: center">6</td><td style="text-align: center">7</td><td style="text-align: center">8</td><td style="text-align: center">9</td><td style="text-align: center">10</td><td style="text-align: center">11</td><td style="text-align: center">12</td><td style="text-align: center">13</td></tr><td style="text-align: center">chars</td><td style="text-align: center">0</td><td style="text-align: center">1</td><td style="text-align: center">2</td><td style="text-align: center">3</td><td style="text-align: center" colspan="3">4</td><td style="text-align: center" colspan="3">5</td><td style="text-align: center">6</td><td style="text-align: center">7</td><td style="text-align: center">8</td><td style="text-align: center">9</td></tbody></table>
+
+<p>可以得出下面对应关系</p>
+<pre><code>bytes[0:] = chars[0:]
+bytes[1:] = chars[1:]
+bytes[2:] = chars[2:]
+bytes[3:] = chars[3:]
+bytes[4:] = chars[4:]
+bytes[7:] = chars[5:]
+bytes[10:] = chars[6:]
+... ...
+</code></pre><h3 id="2-3-方案"><a href="#2-3-方案" class="headerlink" title="2.3 方案"></a>2.3 方案</h3><p>进行到这一步，高效的算法已经呼之欲出了。算法如下：</p>
+<p>把字符 UTF-8 数据的二进制长度不为 1 的称为特征点。除特征点外，每个字符都是一个字节长度。记下所有特征点的对应关系，对于给定的 bytePos，都可以根据公式计算得到 charPos。</p>
+<p>公式为:</p>
+<pre><code>charPos = bytePos - preBytePos + preCharPos
+</code></pre><p>举例：</p>
+<p>则本实例中有两个特征点 <code>一</code>、<code>个</code>，记作：</p>
+<pre><code>bytes[6:] = chars[4:]
+bytes[9:] = chars[5:]
+</code></pre><p>如果给定 bytePos 10, 首先找到前一个特征点的对应关系 9（preBytePos） -&gt; 5（preCharPos), 根据公式得出 (10 - 9) + 5 = 6。</p>
+<h3 id="2-4-核心代码"><a href="#2-4-核心代码" class="headerlink" title="2.4 核心代码"></a>2.4 核心代码</h3><p>该算法还有一个比较关键的问题要解决，即高效的计算一个 char 的字节长度。计算 char 的字节长度的算法参考了 <a href="http://stackoverflow.com/questions/2726071/efficient-way-to-calculate-byte-length-of-a-character-depending-on-the-encoding" target="_blank" rel="external">StackOverflow</a>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line">// 计算特征点</div><div class="line">private int[][] calcSpecialPos(String str) &#123;</div><div class="line">    ArrayList&lt;int[]&gt; specialPos = new ArrayList&lt;&gt;()</div><div class="line"></div><div class="line">    specialPos.add(new int[] &#123;0, 0&#125;);</div><div class="line"></div><div class="line">    int lastCharPost = 0;</div><div class="line">    int lastBytePos = 0;</div><div class="line"></div><div class="line">    Charset utf8 = Charset.forName(&quot;UTF-8&quot;);</div><div class="line">    CharsetEncoder encoder = utf8.newEncoder();</div><div class="line">    CharBuffer input = CharBuffer.wrap(str.toCharArray());</div><div class="line">    ByteBuffer output = ByteBuffer.allocate(10);</div><div class="line"></div><div class="line">    int limit = input.limit();</div><div class="line">    while(input.position() &lt; limit) &#123;</div><div class="line">        output.clear();</div><div class="line">        input.mark();</div><div class="line">        input.limit(Math.min(input.position() + 2, input.capacity()));</div><div class="line">        if (Character.isHighSurrogate(input.get()) &amp;&amp; !Character.isLowSurrogate(input.get())) &#123;</div><div class="line">            //Malformed surrogate pair</div><div class="line">            lastCharPost++;</div><div class="line">        &#125;</div><div class="line">        input.limit(input.position());</div><div class="line">        input.reset();</div><div class="line">        encoder.encode(input, output, false);</div><div class="line"></div><div class="line">        int encodedLen = output.position();</div><div class="line">        lastCharPost++;</div><div class="line">        lastBytePos += encodedLen;</div><div class="line"></div><div class="line">        if (encodedLen != 1) &#123; // 特征点</div><div class="line">            specialPos.add(new int[]&#123;lastBytePos, lastCharPost&#125;);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    return toArray(specialPos);</div><div class="line">&#125;</div><div class="line"></div><div class="line">// 根据特征点，计算 bytePos 对应的 charPos</div><div class="line">private int calcPos(int[][] specialPos, int bytePos) &#123;</div><div class="line">    // 如果只有一个元素 &#123;0, 0)，说明没有特征值</div><div class="line">    if (specialPos.length == 1) return bytePos;</div><div class="line"></div><div class="line">    int pos = Arrays.binarySearch(specialPos,</div><div class="line">            new int[] &#123;bytePos, 0&#125;,</div><div class="line">            (int[] a, int[] b) -&gt; Integer.compare(a[0], b[0]));</div><div class="line"></div><div class="line">    if (pos &gt;= 0) &#123;</div><div class="line">        return specialPos[pos][1];</div><div class="line">    &#125; else &#123;</div><div class="line">        // if binary search not fonund, will return (-(insertion point) - 1),</div><div class="line">        // so here -2 is mean -1 to get insertpoint and then -1 to get previous specialPos</div><div class="line">        int[] preSpecialPos = specialPos[-pos-2];</div><div class="line">        return bytePos - preSpecialPos[0] + preSpecialPos[1];</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="3-优化二"><a href="#3-优化二" class="headerlink" title="3 优化二"></a>3 优化二</h2><h3 id="3-1-背景"><a href="#3-1-背景" class="headerlink" title="3.1 背景"></a>3.1 背景</h3><p>接下来解决第二个函数 rest。该函数的功能是得到 JsonArray（gson） 的除第一个元素外的所有元素。</p>
+<p>由于 rest 是在一个递归函数中被调用且递归栈很深，因此如果 rest 实现的不够高效，其影响会被成倍放大。</p>
+<h3 id="3-2-原实现"><a href="#3-2-原实现" class="headerlink" title="3.2 原实现"></a>3.2 原实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">private JsonArray rest(JsonArray arr) &#123;</div><div class="line">    JsonArray result = new JsonArray();</div><div class="line">    if (arr.size() &gt; 1) &#123;</div><div class="line">        for (int i = 1; i &lt; arr.size(); i++) &#123;</div><div class="line">            result.add(arr.get(i));</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="3-3-剖析"><a href="#3-3-剖析" class="headerlink" title="3.3 剖析"></a>3.3 剖析</h3><p>通过调试发现 JsonArray 中存储了相当大的数据，对于频繁调用的场景，每次都对其重新构建明显不是一个明智的选择。<br>通过查看返回的 JsonArray 使用情况，我们得到了另一条线索：仅仅使用里面的数据，而不涉及修改。</p>
+<p>考虑到 JsonArray 被实现成 final，最后方案确定为实现一个针对 rest 这种需求定制的代理类。</p>
+<h3 id="3-4-方案-amp-代码"><a href="#3-4-方案-amp-代码" class="headerlink" title="3.4 方案 &amp; 代码"></a>3.4 方案 &amp; 代码</h3><p>代理类 JsonArrayWrapper 分别对 first、rest、foreach 等功能进行了实现。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line">class JsonArrayWrapper implements Iterable&lt;JsonElement&gt; &#123;</div><div class="line">    private JsonArray jsonArray;</div><div class="line"></div><div class="line">    private int mark;</div><div class="line"></div><div class="line">    public JsonArrayWrapper() &#123;</div><div class="line">        this.jsonArray = new JsonArray();</div><div class="line">        this.mark = 0;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public JsonArrayWrapper(JsonArray jsonArray) &#123;</div><div class="line">        this.jsonArray= jsonArray;</div><div class="line">        this.mark = 0;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public JsonArrayWrapper(JsonArray jsonArray, int mark) &#123;</div><div class="line">        this.jsonArray = jsonArray;</div><div class="line">        this.mark = mark;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public JsonObject first() &#123;</div><div class="line">        return jsonArray.get(mark).getAsJsonObject();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public JsonArrayWrapper rest() &#123;</div><div class="line">        return new JsonArrayWrapper(jsonArray, mark+1);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public int size() &#123;</div><div class="line">        return jsonArray.size() - mark;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public JsonElement get(int n) &#123;</div><div class="line">        return jsonArray.get(mark + n);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public void add(JsonElement jsonElement) &#123;</div><div class="line">        jsonArray.add(jsonElement);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    public void addAll(JsonArrayWrapper jsonArrayWrapper) &#123;</div><div class="line">        jsonArrayWrapper.forEach(this.jsonArray::add);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    @Override</div><div class="line">    public Iterator&lt;JsonElement&gt; iterator() &#123;</div><div class="line">        JsonArray jsonarray = new JsonArray();</div><div class="line">        this.forEach(e -&gt; jsonarray.add(e));</div><div class="line">        return jsonarray.iterator();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    @Override</div><div class="line">    public void forEach(Consumer&lt;? super JsonElement&gt; action) &#123;</div><div class="line">        for (int i=mark; i&lt;jsonArray.size(); i++) &#123;</div><div class="line">            action.accept(jsonArray.get(i));</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="4-成果"><a href="#4-成果" class="headerlink" title="4 成果"></a>4 成果</h2><p>经过这两个主要的优化，就解决了代码中的性能问题，成果如下图所示：</p>
+<img src="/2016/03/27/how-to-optimize/bg2016031202.png" alt="bg2016031202.png" title="">
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/03/15/java-and-unicode/" rel="next" title="Java 与 Unicode">
+                <i class="fa fa-chevron-left"></i> Java 与 Unicode
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/03/how-implement-git-client-in-web-ide/" rel="prev" title="Git 客户端在 WebIDE 中的实现">
+                Git 客户端在 WebIDE 中的实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="/uploads/avatar.jpg"
+              alt="tanhe123" />
+          
+            <p class="site-author-name" itemprop="name">tanhe123</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Visual-VM"><span class="nav-number">1.</span> <span class="nav-text">1 Visual VM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-优化一"><span class="nav-number">2.</span> <span class="nav-text">2 优化一</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-背景"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-原实现"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 原实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-剖析"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 剖析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-方案"><span class="nav-number">2.4.</span> <span class="nav-text">2.3 方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-核心代码"><span class="nav-number">2.5.</span> <span class="nav-text">2.4 核心代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-优化二"><span class="nav-number">3.</span> <span class="nav-text">3 优化二</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-背景"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-原实现"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 原实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-剖析"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 剖析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-方案-amp-代码"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 方案 & 代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-成果"><span class="nav-number">4.</span> <span class="nav-text">4 成果</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tanhe123</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.2</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

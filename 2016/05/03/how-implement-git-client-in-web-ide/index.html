@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="tanhe123, blog" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="tanhe123's blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Git 客户端在 WebIDE 中的实现上周日做了一个分享，介绍了如何在 WebIDE 中实现 Git 客户端，主要内容包括 Git 原理、JGit 的使用。以下是主要的分享内容。 版本控制管理文档、程序、配置等文件内容变化的的系统。 其实版本控制很想 并不难理解，其实即使不是编程人员对他也不会陌生，比如 windows 的系统还原，mac 的 timemachine。他们在某一时刻，记录下系统的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 客户端在 WebIDE 中的实现">
+<meta property="og:url" content="http://yoursite.com/2016/05/03/how-implement-git-client-in-web-ide/index.html">
+<meta property="og:site_name" content="tanhe123&#39;s blog">
+<meta property="og:description" content="Git 客户端在 WebIDE 中的实现上周日做了一个分享，介绍了如何在 WebIDE 中实现 Git 客户端，主要内容包括 Git 原理、JGit 的使用。以下是主要的分享内容。 版本控制管理文档、程序、配置等文件内容变化的的系统。 其实版本控制很想 并不难理解，其实即使不是编程人员对他也不会陌生，比如 windows 的系统还原，mac 的 timemachine。他们在某一时刻，记录下系统的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/9dcc8fa1-7217-425b-9102-46ad3b9275e3.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/f0aeb94f-6d70-40bc-b40b-7bbb1d7de688.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/e494e331-4bde-4bc0-850f-678121f829c9.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/5eae25c3-7055-4d10-94ef-21c4ed1abc41.bmp">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/a2897509-382d-4a2a-9d94-4c4d8e8a4051.bmp">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/128e6044-9bbb-4b84-9ac7-5552c6a946ec.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/1935c742-57af-4205-9fa1-d42b54323c54.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/713886dd-e199-453c-9863-c65457fddb14.png">
+<meta property="og:image" content="https://dn-coding-net-production-pp.qbox.me/c3374133-939a-4f35-9ff3-df1cfa87c284.png">
+<meta property="og:updated_time" content="2017-09-26T08:38:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git 客户端在 WebIDE 中的实现">
+<meta name="twitter:description" content="Git 客户端在 WebIDE 中的实现上周日做了一个分享，介绍了如何在 WebIDE 中实现 Git 客户端，主要内容包括 Git 原理、JGit 的使用。以下是主要的分享内容。 版本控制管理文档、程序、配置等文件内容变化的的系统。 其实版本控制很想 并不难理解，其实即使不是编程人员对他也不会陌生，比如 windows 的系统还原，mac 的 timemachine。他们在某一时刻，记录下系统的">
+<meta name="twitter:image" content="https://dn-coding-net-production-pp.qbox.me/9dcc8fa1-7217-425b-9102-46ad3b9275e3.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/05/03/how-implement-git-client-in-web-ide/"/>
+
+
+
+
+
+  <title>Git 客户端在 WebIDE 中的实现 | tanhe123's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">tanhe123's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/03/how-implement-git-client-in-web-ide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tanhe123">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tanhe123's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Git 客户端在 WebIDE 中的实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-05-03T10:12:00+08:00">
+                2016-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Git-客户端在-WebIDE-中的实现"><a href="#Git-客户端在-WebIDE-中的实现" class="headerlink" title="Git 客户端在 WebIDE 中的实现"></a>Git 客户端在 WebIDE 中的实现</h1><p>上周日做了一个分享，介绍了如何在 WebIDE 中实现 Git 客户端，主要内容包括 Git 原理、JGit 的使用。以下是主要的分享内容。</p>
+<h2 id="版本控制"><a href="#版本控制" class="headerlink" title="版本控制"></a>版本控制</h2><p>管理文档、程序、配置等文件内容变化的的系统。</p>
+<p>其实版本控制很想 并不难理解，其实即使不是编程人员对他也不会陌生，比如 windows 的系统还原，mac 的 timemachine。他们在某一时刻，记录下系统的状态或文件的内容，然后在需要的时候可以恢复。</p>
+<p>对于程序员来说，他有以下好处：</p>
+<ol>
+<li><p>恢复：当不小心删除了文件、或者改错了文件，可以恢复文件内容</p>
+</li>
+<li><p>回滚：新版本出现了重大问题，可以回滚到上一正确的状态。</p>
+</li>
+<li><p>协作：不同开发者根据同一个版本进行开发，形成不同版本可以方便的合并在一起。</p>
+</li>
+</ol>
+<h2 id="常见的版本控制系统"><a href="#常见的版本控制系统" class="headerlink" title="常见的版本控制系统"></a>常见的版本控制系统</h2><p>常见的版本控制系统有 CVS、SVN、Mercurial、Git 等。</p>
+<p>这四个版本控制系统可以根据对网络的要求分成两组，一组是CVS、SVN，一组是 Mercurial、Git。</p>
+<ul>
+<li><p>CVS、SVN：使用中央仓库，开发者需要从中央仓库中取出代码</p>
+</li>
+<li><p>Mercurial、Git：使用本地仓库，开发者可以本地开发</p>
+</li>
+</ul>
+<p>第一组要求必须连到公司的网络才能办公，而第二组仓库在本地，意味着不用连接到公司的网络，进一步可以说是离线就可以办公。</p>
+<p>像Git、Mercurial这样的分布式的版本控制系统变得越来越流行，正在慢慢取代像CVS、SVN“中央式“的版本控制系统。</p>
+<h2 id="为什么选择-Git"><a href="#为什么选择-Git" class="headerlink" title="为什么选择 Git"></a>为什么选择 Git</h2><p>是什么原因让 git 从这么多的版本控制系统中脱颖而出呢？</p>
+<ol>
+<li><p><strong>本地提交：</strong> 这意味着无论你是在家里、还是地铁上都可以离线工作了，不需要连到公司的网络。</p>
+</li>
+<li><p><strong>轻量级分支：</strong> git 的轻量级分支使得你可以快速的切换项目版本。这种特性在某些场景下特别重要，尤其是当我们正在开发过程中，突然发现一个紧急bug需要修复，我们可以快速切换分支，修复bug。</p>
+</li>
+<li><p><strong>解决冲突方便：</strong> 正因为有轻量级的分支，git也鼓励我们使用分支进行开发。但是当我们将分支合并到主干时，不可避免的会出现冲突，而 git 解决冲突的方式对用户非常的友好</p>
+</li>
+<li><p><strong>有 Github、Coding 这样强大的代码托管平台支持：</strong> 在 Github 和 Coding 上有非常多的开源代码，而且这两个平台上的用户非常的活跃，使用 git，有助于接触更多优秀的项目、优秀的开发者，对我们的成长有非常大的帮助。</p>
+</li>
+</ol>
+<h1 id="Git-原理"><a href="#Git-原理" class="headerlink" title="Git 原理"></a>Git 原理</h1><h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>一段经典的 git 操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">touch README.md</div><div class="line">git add README.md</div><div class="line">git commit -m &quot;add readme&quot;</div></pre></td></tr></table></figure>
+<p><code>touch READEME.md</code> 可以代表创建、修改文件操作<br><code>git add README.md</code> 表示将对文件的改动添加到暂存区<br><code>git commit -m &quot;add readme&quot;</code>表示将改动提交到仓库  </p>
+<p>这些我们都已经知道了，那么添加到暂存区、提交到仓库具体是什么意思？</p>
+<h2 id="三种状态"><a href="#三种状态" class="headerlink" title="三种状态"></a>三种状态</h2><p> <img src="https://dn-coding-net-production-pp.qbox.me/9dcc8fa1-7217-425b-9102-46ad3b9275e3.png" alt="图片"></p>
+<p>git 有三种状态：工作区、暂存区、本地仓库。</p>
+<ul>
+<li><p><strong>add:</strong> 工作区 -&gt; 暂存区</p>
+</li>
+<li><p><strong>commit:</strong> 暂存区 -&gt; 本地仓库</p>
+</li>
+</ul>
+<p>工作目录我们是知道的，我们平时编写代码，就是在工作目录中完成的。</p>
+<p>暂存区也叫做索引，保存了下次将提交的文件列表。</p>
+<p>本地仓库是 Git 用来保存项目的数据的地方。提交代码，意味着将文件内容永久保存到数据库中。</p>
+<p>首先看一下本地仓库，项目中的文件在本地仓库中是以快照的形式来保存的。</p>
+<h2 id="git-中的快照"><a href="#git-中的快照" class="headerlink" title="git 中的快照"></a>git 中的快照</h2><p><img src="https://dn-coding-net-production-pp.qbox.me/f0aeb94f-6d70-40bc-b40b-7bbb1d7de688.png" alt="图片"></p>
+<p>每一个 version，都是项目的一次完整快照。而快照中没有修改的文件，Git 使用链接指向之前存储的文件。</p>
+<p>这就带来了一个问题，链接是什么？怎么快速的知道文件内容是否发生了改变？git 中的方案是使用 SHA-1。</p>
+<h2 id="SHA-1"><a href="#SHA-1" class="headerlink" title="SHA-1"></a>SHA-1</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">echo &apos;test content&apos; | git hash-object --stdin</div><div class="line">d670460b4b4aece5915caf5c68d12f560a9fe3e4</div></pre></td></tr></table></figure>
+<p>特点：</p>
+<ul>
+<li>由文件内容计算出的hash值</li>
+<li>hash值相同，文件内容相同</li>
+<li>作为唯一 id</li>
+</ul>
+<p>SHA-1将文件中的内容通过算法生成一个 160bit 的报文摘要，即40个十六进制数字。SHA-1的一个重要特征就是几乎可以保证，如果两个文件的SHA-1值是相同的，那么它们确是完全相同的内容。</p>
+<p>上面的代码，无论运行几次，得到的 hash 值都是一样的。这个hash值可以看作是该文件的唯一id。</p>
+<p>Git 中所有数据在存储前都计算该hash值，然后用该hash值来引用。因此这个 id 除了可以唯一表示任何版本中的文件，还可以表示任何一次提交、任何一次代码的快照。</p>
+<h2 id="实际存储在-git-中的数据"><a href="#实际存储在-git-中的数据" class="headerlink" title="实际存储在 git 中的数据"></a>实际存储在 git 中的数据</h2><p><code>find .git/objects -type f</code></p>
+<p><img src="https://dn-coding-net-production-pp.qbox.me/e494e331-4bde-4bc0-850f-678121f829c9.png" alt="图片"></p>
+<p>我们来看一下实际存储在git中的数据，看起来比较乱，这些数据存放在 .git/objects，然后使用sha-1计算的hash值的前两位作为文件夹的名字，后面的38位作为文件的名字。</p>
+<p>在这么多的文件中，其实可以分为4种类型，分别是 blob、commit、tree 和 tag。</p>
+<p>将上面的内容经过按照这些类型整理可以得到类似下面的关系（忽略 tag）。</p>
+<p><img src="https://dn-coding-net-production-pp.qbox.me/5eae25c3-7055-4d10-94ef-21c4ed1abc41.bmp" alt="图片"></p>
+<p>每一个线框表示了一个object，也就是 objects 目录下的一个文件。</p>
+<p>每个 object 上面的这个字母与数字组合的字符串，就是object的上一目录名＋文件名，也就是 sha-1 hash 值。</p>
+<p>每个 object 的第一行格式是一致的，都由两列组成，第一列表示了 object 的类型，第二列是文件内容的长度。</p>
+<p>接下来我们分别看一下每种类型：</p>
+<p><strong>blob:</strong> 用来存放项目文件的内容，项目的任意文件的任意版本都是以 blob 的形式存放的。但是不包括文件的路径、名字、格式等其它描述信息。</p>
+<p><strong>tree:</strong> 用来表示项目中的目录，我们知道，目录中有文件、有子目录。因此 tree 中有  blob、子 tree。这是与目录的对应。tree 中还包含了文件的路径以及名称。从顶层的 tree 纵览整个树状的结构，叶子结点就是blob，表示文件的内容，非叶子结点表示项目的目录，那么<strong>顶层的 tree 对象就代表了当前项目的快照</strong>。</p>
+<p><strong>commit:</strong> 一个commit表示一次提交。里面的 tree 的值指向了项目的快照。还有一些其它的信息，比如 parent，committer、author、message 等信息。<br>tree 看成一个树状的结构，blob 可以作为其中的叶子结点出现。commit 可以看作是一个DAG，有向无环图。因为 commit 可以有一个 parent，也可以有两个或者多个parent。</p>
+<p>至此，本地仓库我们就了解完了。接下来看一下暂存区。</p>
+<h2 id="暂存区"><a href="#暂存区" class="headerlink" title="暂存区"></a>暂存区</h2><p>暂存区是工作区与本地仓库之间的一个缓冲，它保存了下次将提交的文件列表信息。它其实是一个文件，路径为： <code>.git/index</code>。由于该文件是一个二进制文件，没办法直接看它的内容，但是可以使用 git 命令查看。</p>
+<p><img src="https://dn-coding-net-production-pp.qbox.me/a2897509-382d-4a2a-9d94-4c4d8e8a4051.bmp" alt="图片"></p>
+<p>每列的含义依次为，文件权限、文件 blob、文件状态、文件名。</p>
+<p>第二列指的是文件的 blob。这个 blob 存放了文件暂存时的内容。</p>
+<p>我们操作暂存区的场景是这样的，每当编辑好一个或几个文件后，把它加入到暂存区，然后接着修改其他文件，改好后放入暂存区，循环反复。直到修改完毕，最后使用 commit 命令，将暂存区的内容永久保存到本地仓库。</p>
+<p>这个过程其实就是构建项目快照的过程，因此可以说暂存区是用来构建项目快照的区域。</p>
+<h2 id="分支"><a href="#分支" class="headerlink" title="分支"></a>分支</h2><p>接下来看一下分支的概念，首先看一张图：</p>
+<p> <img src="https://dn-coding-net-production-pp.qbox.me/128e6044-9bbb-4b84-9ac7-5552c6a946ec.png" alt="图片"></p>
+<p>这张图中的每一个点表示了一个commit。从这张图中我们可以看出的信息有：</p>
+<ul>
+<li><p>从任意一点分歧出来的线都可以叫做分支</p>
+</li>
+<li><p>分支可以合并</p>
+</li>
+</ul>
+<h2 id="分支的实现"><a href="#分支的实现" class="headerlink" title="分支的实现"></a>分支的实现</h2><p>在 .git/HEAD 文件中，保存了当前的分支。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">cat .git/HEAD</div><div class="line">=&gt;ref: refs/heads/master</div></pre></td></tr></table></figure>
+<p>其实这个 ref 表示的就是一个分支，它也是一个文件，我们可以继续看一下这个文件的内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">cat .git/refs/heads/master</div><div class="line">=&gt; 2b388d2c1c20998b6233ff47596b0c87ed3ed8f8</div></pre></td></tr></table></figure>
+<p>可以看到分支存储了一个 object，我们可以使用 cat-file 命令继续查看该 object 的内容。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">git cat-file -p 2b388d2c1c20998b6233ff47596b0c87ed3ed8f8</div><div class="line">=&gt; tree 15f880be0567a8844291459f90e9d0004743c8d9</div><div class="line">=&gt; parent 3d885a272478d0080f6d22018480b2e83ec2c591</div><div class="line">=&gt; author Hehe Tan &lt;xiayule148@gmail.com&gt; 1460971725 +0800</div><div class="line">=&gt; committer Hehe Tan &lt;xiayule148@gmail.com&gt; 1460971725 +0800</div><div class="line">=&gt;</div><div class="line">=&gt; add branch paramter for rebase</div></pre></td></tr></table></figure>
+<p>从上面的内容，我们知道了分支指向了一次提交。为什么分支指向一个提交的原因，其实也是git中的分支为什么这么轻量的答案。</p>
+<p>因为分支就是指向了一个 commit 的指针，当我们提交新的commit，这个分支的指向只需要跟着更新就可以了，而创建分支仅仅是创建一个指针。</p>
+<p>至此git的原理就讲完了，接下来看一下 JGit。</p>
+<h1 id="JGit"><a href="#JGit" class="headerlink" title="JGit"></a>JGit</h1><p>JGit 是一个用 Java 实现的比较健全的 git 实现，Eclipse IDE 中的 git 插件 Egit，就是基于 JGit 开发的。同 git 一样，它提供了底层命令和高层命令。</p>
+<p> <img src="https://dn-coding-net-production-pp.qbox.me/1935c742-57af-4205-9fa1-d42b54323c54.png" alt="图片"></p>
+<p>高层命令的入口是 Git 类。高层命令好理解，我们使用 git 的客户端绝大多数命令都是高层命令。</p>
+<p>比如 add、commit、checkout 等都是高层命令，他们提供了友好的交互，往往一条命令就能完成你所想要的效果。</p>
+<p>底层命令的入口是 Repository 类。底层命令不同于高层命令，它们直接作用域 仓库（Repository）。比如 AbstractTreeIterator，就是用来遍历 Tree 结构的，DirCache 是用来操作暂存区的，RevWalk 是用来遍历 commit 的，ObjectInsert 是用来生成 obj的，ObjectLoader 是用来加载 object。</p>
+<p>一条高层命令往往是由多条底层命令组成的。</p>
+<h2 id="Repository-仓库"><a href="#Repository-仓库" class="headerlink" title="Repository(仓库)"></a>Repository(仓库)</h2><p>作为一切的开始，你需要一个 Repository。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Repository repository = new FileRepositoryBuilder()</div><div class="line">                .setGitDir(new File(&quot;/home/tan/GitTest/.git&quot;))</div><div class="line">                .readEnvironment()</div><div class="line">                .build();</div></pre></td></tr></table></figure>
+<p>使用时只需要将仓库的路径传进来就可以了，它会自动读取一些必要的环境变量。</p>
+<h2 id="ObjectInserter"><a href="#ObjectInserter" class="headerlink" title="ObjectInserter"></a>ObjectInserter</h2><p>ObjectInserter用来将数据插入到git数据库中，也就是 objects 目录下。插入的类型为我们刚才提到的四种，分别是 Blob、Tree、Commit、Tag。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">try (ObjectInserter inserter = repo.newObjectInserter()) &#123;</div><div class="line">    ObjectId objectId = inserter.insert(Constants.OBJ_BLOB,</div><div class="line">        new String(&quot;test&quot;).getBytes());</div><div class="line">    inserter.flush();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>第二个参数表示要插入的数据，该数据会自动使用 zlib 压缩。</p>
+<h2 id="TreeWalk"><a href="#TreeWalk" class="headerlink" title="TreeWalk"></a>TreeWalk</h2><p>用来遍历目录结构，可以为工作区、暂存区或项目快照（版本库）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">try (TreeWalk treeWalk = new TreeWalk(repo)) &#123;</div><div class="line">    treeWalk.setRecursive(true);</div><div class="line"></div><div class="line">    treeWalk.addTree(new FileTreeIterator(repo));</div><div class="line">    treeWalk.addTree(new DirCacheIterator(repo.readDirCache()));</div><div class="line"></div><div class="line">    while (treeWalk.next()) &#123;</div><div class="line">        AbstractTreeIterator treeIterator</div><div class="line">                = treeWalk.getTree(0, AbstractTreeIterator.class);</div><div class="line">        DirCacheIterator dirCacheIterator</div><div class="line">                = treeWalk.getTree(1, DirCacheIterator.class);</div><div class="line"></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>TreeWalk 是用来遍历树这种结构的，它比较厉害的一点是可以同时遍历多棵树，遍历多课树的思路为将文件列表做一个合并，然后遍历这个列表，没有的调用 getTree 会返回 null 值。</p>
+<p>其实 git status 就是这种原理来做的:</p>
+<ol>
+<li>changed： 在版本库、idnex 中都存在，内容不同</li>
+<li>removed： 在版本库存在，在 index 不存在</li>
+<li>added：在 index 存在，在版本库不存在</li>
+<li>untracked：不在版本库和 index，只在工作目录中存在</li>
+<li>modified：在 index，在工作区，且文件内容不同</li>
+<li>missing：在 index 存在，在工作区不存在</li>
+</ol>
+<h2 id="RevWalk"><a href="#RevWalk" class="headerlink" title="RevWalk"></a>RevWalk</h2><p>RevWalk 用来遍历 Commit。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">try (RevWalk revWalk = new RevWalk(repository)) &#123;</div><div class="line">    revWalk.markStart(one);</div><div class="line">    revWalk.markStart(two);</div><div class="line"></div><div class="line">    revWalk.setRevFilter(RevFilter.MERGE_BASE);</div><div class="line"></div><div class="line">    RevCommit base = revWalk.next();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们这个例子，标记了两个 commit，我们设置的 filter 是 MERGE_BASE, 它会自动查找这两个 commit 所在分支的 MERGE_BASE。其中 MERGE_BASE 可以看作是分支的分岔点，合并的时候 MERGE_BASE 会作为参照。</p>
+<h2 id="使用底层命令"><a href="#使用底层命令" class="headerlink" title="使用底层命令"></a>使用底层命令</h2><p>高层命令其实是由多条底层命令组成的，比如我们最常使用的 add、commit：</p>
+<ul>
+<li><p>add</p>
+<ul>
+<li>使用 ObjectInserter 将文件内容写入 objects (blob)，得到 blob id</li>
+<li>使用 DirCache 将 blob id 写入暂存区</li>
+</ul>
+</li>
+<li><p>commit</p>
+<ul>
+<li>使用 DirCache 将 index 生成 tree</li>
+<li>使用 ObjectInserter 将 tree 写入仓库(tree)，得到 tree 的 id</li>
+<li>构建 commit，写入 tree id 以及设置其 parent、message 等其它信息</li>
+<li>利用 ObjectInserter 将 commit 写入 objects (commit)，得到 commit id</li>
+<li>将 commit id 写入当前的 branch，使得 branch 指向最新的 commit</li>
+</ul>
+</li>
+</ul>
+<h2 id="高层命令"><a href="#高层命令" class="headerlink" title="高层命令"></a>高层命令</h2><p>上面的复杂操作，可以简单的用底层命令替代。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">git.add().addFilepattern(&quot;README&quot;).call();</div><div class="line">git.commit().setMessage(&quot;add readme&quot;).call();</div></pre></td></tr></table></figure>
+<h1 id="高级操作的局限"><a href="#高级操作的局限" class="headerlink" title="高级操作的局限"></a>高级操作的局限</h1><p>高层命令使用起来方便，但是它所提供的功能有限。这里我们拿 merge 举例。</p>
+<h2 id="使用-JGit-Merge-api"><a href="#使用-JGit-Merge-api" class="headerlink" title="使用 JGit Merge api"></a>使用 JGit Merge api</h2><p>使用 JGit 提供的接口进行 merge 十分的方便，只需要指定要合并的 branch 就可以了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">MergeCommand merge = git.merge();</div><div class="line">merge.include(branch);</div><div class="line">MergeResult result = merge.call();</div></pre></td></tr></table></figure>
+<p>但是 merge 之后呢，文件冲突了怎么办，怎么解决冲突呢？实际上除了 merge，stash、rebase 等等操作也都会产生冲突。也就是说 git 冲突文件的处理是客户端的重要功能之一。</p>
+<p>遗憾的是 jgit 并没有提供解决冲突的方案，所以这就需要我们自己来解决这个问题。</p>
+<h2 id="resolve-conflicts"><a href="#resolve-conflicts" class="headerlink" title="resolve conflicts:"></a>resolve conflicts:</h2><p>一种比较理想的解决冲突的方案是，将冲突的文件根据本地修改、基础版本、要合并分支的修改分成三栏。</p>
+<p> <img src="https://dn-coding-net-production-pp.qbox.me/713886dd-e199-453c-9863-c65457fddb14.png" alt="图片"></p>
+<p>通过这样的方式，我们可以直观的对照冲突的内容，并且可以方便的选取或者要抛弃修改。</p>
+<h2 id="可选方案"><a href="#可选方案" class="headerlink" title="可选方案"></a>可选方案</h2><ol>
+<li><p>计算 merge base</p>
+<p> 第一个就是计算这两个分支的 MERGE_BASE。这样我们获得了三个 commit，每个 commit 都都纪录了提交时的文件快照。而我们只要将冲突文件的内容从快照中取出来就好了。但是这个方案有个缺点，那就是我们只有在合并的那一瞬间才能知道要合并的分支，之后想要知道只能去 .git 下面的 MERGE_HEAD 去查，而且其它方式比如 stash、rebase 等操作引起的冲突是不会生成该文件的。</p>
+</li>
+<li><p>使用暂存区的信息</p>
+<p> 想想我们 当我们有合并冲突状态时，使用 git status，会列出冲突文件，以及冲突的类型，比如 “双方修改”、“由我们删除”，“双方添加”等这样的字眼，git 如果获得这些信息的呢？</p>
+<p> 如果存在冲突文件，我们查看暂存区，可以看到类似下面的内容：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git ls-files --stage</div><div class="line">100644 6e9f0da13f19b444ec3a9c3d6e795ad35c0554a2 1	Readme</div><div class="line">100644 29d460866c44ad72cc08ef4983fc6ebd48053bab 2	Readme</div><div class="line">100644 12892f544e81ef2170034392f63c7fc5e6c6ccd9 3	Readme</div></pre></td></tr></table></figure>
+<p> 原来暂存区中有四种状态用于标示文件：    </p>
+<pre><code>* **0:** standard stage
+* **1:** base tree revision
+* **2:** first tree revision (usually called &quot;ours&quot;)
+* **3:** second tree revision (usually called &quot;theirs&quot;)
+</code></pre><p> 接下来我们专门看一下这4种状态是如何表示冲突状态的。</p>
+</li>
+</ol>
+<h2 id="文件冲突的状态："><a href="#文件冲突的状态：" class="headerlink" title="文件冲突的状态："></a>文件冲突的状态：</h2><p>假设当前我们处于 master 分支，要合并的分支为 test，开发历史如下图：</p>
+<p> <img src="https://dn-coding-net-production-pp.qbox.me/c3374133-939a-4f35-9ff3-df1cfa87c284.png" alt="图片"></p>
+<p>现在假设合并过程中有个文件（Readme）发生了冲突，我们查询暂存区该文件的状态（可以有多个）：</p>
+<ul>
+<li><strong>1 and 2:</strong> DELETED_BY_THEM;</li>
+<li><strong>1 and 3:</strong> DELETED_BY_US;</li>
+<li><strong>2 and 3:</strong> BOTH_ADDED;</li>
+<li><strong>1 and 2 and 3</strong>: BOTH_MODIFIED</li>
+</ul>
+<p>我们拿第一种情况举例，文件（Readme）有两种状态 1 和 2，1 表示该文件存在于 commit 1（也就是MERGE_BASE），2 表示该文件在 commit 2 （master 分支）中被修改了，没有状态 3，也就是该文件在 commit 3（test分支）被删除了，总结来说这种状态就是 DELETED_BY_THEM。</p>
+<p>可以再看一下第四种情况，文件（Readme）有三种状态 1、2、3，1 表示 commit 1（MERGE_BASE）中存在，2 表示 commit 2（master 分支）进行了修改，3 表示（test 分支）也就行了修改，总结来说就是 BOTH_MODIFIED（双方修改）。</p>
+<h2 id="获取冲突文件的三个版本"><a href="#获取冲突文件的三个版本" class="headerlink" title="获取冲突文件的三个版本"></a>获取冲突文件的三个版本</h2><p>知道了冲突文件的状态，就能在暂存区获得冲突文件的三个版本了。代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">DirCache dirCache = repository.readDirCache();</div><div class="line"></div><div class="line">// 在暂存区中，所有文件是按照字母顺序排列的，因此文件的不同状态是连着的</div><div class="line">int eIdx = dirCache.findEntry(path);</div><div class="line">// nextEntry 会自动调过文件名相同的文件，找到下一个文件。</div><div class="line">int lastIdx = dirCache.nextEntry(eIdx);</div><div class="line"></div><div class="line">// 在 [eIdx, lastIdx) 区间的也就是文件的冲突的不同版本</div><div class="line">for (int i=0; i&lt;lastIdx - eIdx; i++) &#123;</div><div class="line">    DirCacheEntry entry = dirCache.getEntry(eIdx + i);</div><div class="line"></div><div class="line">    // 如果是 MERGE_BASE</div><div class="line">    if (entry.getStage() == DirCacheEntry.STAGE_1)</div><div class="line">        readBlobContent(entry.getObjectId());</div><div class="line">    // 如果是 当前分支</div><div class="line">    else if (entry.getStage() == DirCacheEntry.STAGE_2)</div><div class="line">        readBlobContent(entry.getObjectId());</div><div class="line">    // 如果是 要合并的分支</div><div class="line">    else if (entry.getStage() == DirCacheEntry.STAGE_3)</div><div class="line">        readBlobContent(entry.getObjectId());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>至此我们得到了解决合并冲突的一个方案。</p>
+<h1 id="Thanks"><a href="#Thanks" class="headerlink" title="Thanks"></a>Thanks</h1>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/03/27/how-to-optimize/" rel="next" title="Java 项目优化实战">
+                <i class="fa fa-chevron-left"></i> Java 项目优化实战
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/05/git-implement/" rel="prev" title="使用原理视角看 Git">
+                使用原理视角看 Git <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          
+            <img class="site-author-image" itemprop="image"
+              src="/uploads/avatar.jpg"
+              alt="tanhe123" />
+          
+            <p class="site-author-name" itemprop="name">tanhe123</p>
+            <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+            
+              <a href="/archives/">
+            
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Git-客户端在-WebIDE-中的实现"><span class="nav-number">1.</span> <span class="nav-text">Git 客户端在 WebIDE 中的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#版本控制"><span class="nav-number">1.1.</span> <span class="nav-text">版本控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见的版本控制系统"><span class="nav-number">1.2.</span> <span class="nav-text">常见的版本控制系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么选择-Git"><span class="nav-number">1.3.</span> <span class="nav-text">为什么选择 Git</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Git-原理"><span class="nav-number">2.</span> <span class="nav-text">Git 原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#例子"><span class="nav-number">2.1.</span> <span class="nav-text">例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三种状态"><span class="nav-number">2.2.</span> <span class="nav-text">三种状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#git-中的快照"><span class="nav-number">2.3.</span> <span class="nav-text">git 中的快照</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SHA-1"><span class="nav-number">2.4.</span> <span class="nav-text">SHA-1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实际存储在-git-中的数据"><span class="nav-number">2.5.</span> <span class="nav-text">实际存储在 git 中的数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#暂存区"><span class="nav-number">2.6.</span> <span class="nav-text">暂存区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分支"><span class="nav-number">2.7.</span> <span class="nav-text">分支</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分支的实现"><span class="nav-number">2.8.</span> <span class="nav-text">分支的实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JGit"><span class="nav-number">3.</span> <span class="nav-text">JGit</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Repository-仓库"><span class="nav-number">3.1.</span> <span class="nav-text">Repository(仓库)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ObjectInserter"><span class="nav-number">3.2.</span> <span class="nav-text">ObjectInserter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TreeWalk"><span class="nav-number">3.3.</span> <span class="nav-text">TreeWalk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RevWalk"><span class="nav-number">3.4.</span> <span class="nav-text">RevWalk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用底层命令"><span class="nav-number">3.5.</span> <span class="nav-text">使用底层命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#高层命令"><span class="nav-number">3.6.</span> <span class="nav-text">高层命令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#高级操作的局限"><span class="nav-number">4.</span> <span class="nav-text">高级操作的局限</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-JGit-Merge-api"><span class="nav-number">4.1.</span> <span class="nav-text">使用 JGit Merge api</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#resolve-conflicts"><span class="nav-number">4.2.</span> <span class="nav-text">resolve conflicts:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可选方案"><span class="nav-number">4.3.</span> <span class="nav-text">可选方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件冲突的状态："><span class="nav-number">4.4.</span> <span class="nav-text">文件冲突的状态：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取冲突文件的三个版本"><span class="nav-number">4.5.</span> <span class="nav-text">获取冲突文件的三个版本</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Thanks"><span class="nav-number">5.</span> <span class="nav-text">Thanks</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tanhe123</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.2</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
