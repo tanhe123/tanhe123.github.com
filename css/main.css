@@ -1662,6 +1662,14 @@ pre .javascript .function {
 .rtl.post-title {
   font-family: UKIJ Ekran;
 }
+blockquote a {
+  border: none;
+  display: inline-block;
+}
+blockquote a img {
+  border: none;
+  margin: 0 !important;
+}
 .sidebar {
   position: fixed;
   right: 0;
@@ -1819,7 +1827,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #636aec;
+  background: #0d0bcd;
 }
 .links-of-blogroll {
   font-size: 13px;
